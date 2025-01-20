@@ -6,6 +6,7 @@ using System.Net.Sockets;
 using TMPro;
 using UnityEngine.UI;
 using System;
+using System.Threading;
 
 /// <summary>
 /// Extension methods for Unity's Vector3 class to convert to array format.
@@ -104,12 +105,12 @@ public class MotionStreamer : MonoBehaviour
     /// <summary>
     /// Default team number text
     /// </summary>
-    public static string inputText = "9999";
+    public static string inputText = "4201";
 
     /// <summary>
     /// Current team number
     /// </summary>
-    private string teamNumber = "";
+    private string teamNumber = "4201";
 
     /// <summary>
     /// Reference to the VR camera transform
@@ -169,6 +170,16 @@ public class MotionStreamer : MonoBehaviour
     /// Counter for connection retry delay
     /// </summary>
     private int delayCounter = 0;
+
+    
+    public TMP_Text teamNum;
+    public TMP_Text roboRioIp;
+    public TMP_Text headsetIp;
+    
+    [SerializeField]
+    private RawImage connectionStatusLed;
+
+    Thread uiThread = null;
     #endregion
     #endregion
 
@@ -179,12 +190,16 @@ public class MotionStreamer : MonoBehaviour
     void Start()
     {
         OVRPlugin.systemDisplayFrequency = 120.0f;
-        teamNumber = PlayerPrefs.GetString("TeamNumber", "9999");
+        teamNumber = PlayerPrefs.GetString("TeamNumber", "4201");
         setInputBox(teamNumber);
         teamInput.Select();
         ConnectToRobot();
         teamUpdateButton.onClick.AddListener(UpdateTeamNumber);
         teamInput.onSelect.AddListener(OnInputFieldSelected);
+
+        uiThread = new Thread(new ThreadStart(updateUiWorker));
+        uiThread.Start();
+        //uiThread.join();
     }
 
     /// <summary>
@@ -532,6 +547,33 @@ public class MotionStreamer : MonoBehaviour
         else
         {
             Debug.LogError("Placeholder is not assigned or not a TextMeshProUGUI component.");
+        }
+    }
+
+    public void updateUiWorker()
+    {
+        string localIp = "";
+
+        while(true)
+        {
+            // Update the teamNum label
+            teamNum.text = teamNumber;
+
+            // Update the RoboRIO IP used
+            roboRioIp.text = "RoboRIO IP: " + serverAddress;
+            
+            // Update the Headset IP
+            IPHostEntry hostEntry = Dns.GetHostEntry(Dns.GetHostName());
+            IPAddress[] ipv4Addresses = hostEntry.AddressList
+                .Where(ip => ip.AddressFamily == AddressFamily.InterNetwork)
+                .ToArray();
+            localIp = ipv4Addresses[0].ToString();
+
+            headsetIp.text = "Headset IP: " + localIp;
+
+            // Update the connection status
+
+            Thread.Sleep(100);
         }
     }
     #endregion
