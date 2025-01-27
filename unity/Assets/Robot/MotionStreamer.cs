@@ -172,9 +172,9 @@ public class MotionStreamer : MonoBehaviour
     private int delayCounter = 0;
 
     
-    public TMP_Text teamNum;
-    public TMP_Text roboRioIp;
-    public TMP_Text headsetIp;
+    public TextMeshProUGUI teamNum;
+    public TextMeshProUGUI roboRioIp;
+    public TextMeshProUGUI headsetIp;
     
     [SerializeField]
     private RawImage connectionStatusLed;
@@ -525,7 +525,7 @@ public class MotionStreamer : MonoBehaviour
     public void UpdateTeamNumber()
     {
         Debug.Log("[MotionStreamer] Updating Team Number");
-        teamNumber = teamInput.text;
+        teamNumber = "Team Number: " + teamInput.text;
         PlayerPrefs.SetString("TeamNumber", teamNumber);
         PlayerPrefs.Save();
         setInputBox(teamNumber);
@@ -557,10 +557,10 @@ public class MotionStreamer : MonoBehaviour
         while(true)
         {
             // Update the teamNum label
-            teamNum.text = teamNumber;
+            teamNum.text = "Team Number: " + teamNumber;
 
             // Update the RoboRIO IP used
-            roboRioIp.text = "RoboRIO IP: " + serverAddress;
+            roboRioIp.text = "RoboRIO IP: " + getIP();
             
             // Update the Headset IP
             IPHostEntry hostEntry = Dns.GetHostEntry(Dns.GetHostName());
@@ -572,6 +572,11 @@ public class MotionStreamer : MonoBehaviour
             headsetIp.text = "Headset IP: " + localIp;
 
             // Update the connection status
+            if((Time.time - timeStamp) > 5) {
+                connectionStatusLed.color = Color.red;
+            } else {
+                connectionStatusLed.color = Color.green;
+            }
 
             Thread.Sleep(100);
         }
